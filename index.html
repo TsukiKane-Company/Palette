@@ -1,0 +1,14 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>パレット抽出 by 月兼ホッパー</title><link rel="stylesheet" href="style.css"><script src="tsuki-loader.js"></script></head><body>
+<header><h1>パレット抽出 <small>by 月兼ホッパー</small></h1><p class="lead">画像をドロップすると、よく使われている色を拾ってくるよ。画像はブラウザの外に出ないから安心してね。</p></header>
+<main>
+<label id="drop" tabindex="0"><input type="file" id="file" accept="image/*" hidden>
+<span id="dropText">ここに画像をドロップ／クリックして選択／Ctrl+V で貼り付け</span><img id="preview" alt="読み込んだ画像" hidden></label>
+<section id="panel">
+<div class="ctrl"><label for="count">色の数：<b id="countVal">6</b></label><input type="range" id="count" min="5" max="8" value="6"></div>
+<ul id="swatches" aria-live="polite"></ul>
+<div class="btns"><button id="exPng" disabled>PNG で保存</button><button id="exTxt" disabled>TXT で保存</button><button id="exCss" disabled>CSS 変数で保存</button></div>
+<p id="toast" role="status"></p>
+</section></main>
+<footer>月兼重工｜TSUKIKANE HEAVY INDUSTRIES</footer>
+<script src="app.js"></script></body></html>

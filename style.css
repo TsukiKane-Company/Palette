@@ -1,0 +1,19 @@
+:root{--ink:#120C1A;--silver:#ECE8F0;--green:#BBF701;--pink:#F90AA3}
+*{box-sizing:border-box}body{margin:0;background:var(--ink);color:var(--silver);font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+header,main,footer{width:100%;max-width:1100px;margin:0 auto;padding:16px 20px}
+h1{margin:8px 0 4px;font-size:26px;color:var(--green);font-family:ui-monospace,monospace}h1 small{font-size:14px;color:var(--silver);opacity:.8}
+.lead{margin:0;opacity:.85;font-size:14px}
+main{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1}
+#drop{display:flex;align-items:center;justify-content:center;min-height:320px;border:2px dashed #4a4352;border-radius:12px;cursor:pointer;padding:12px;text-align:center;font-size:14px;background:#1b1426}
+#drop.over,#drop:focus{border-color:var(--green);outline:none}#preview{max-width:100%;max-height:60vh;image-rendering:auto;border-radius:6px}
+.ctrl{display:flex;align-items:center;gap:12px;margin-bottom:12px}.ctrl b{color:var(--green)}input[type=range]{flex:1;accent-color:var(--green)}
+#swatches{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+#swatches li{display:flex;align-items:center;gap:12px;background:#1b1426;border-radius:8px;padding:6px;cursor:pointer;border:1px solid transparent}
+#swatches li:hover,#swatches li:focus{border-color:var(--green);outline:none}
+.chip{width:56px;height:40px;border-radius:6px;border:1px solid #4a4352;flex:none}.hex{font-family:ui-monospace,monospace;font-size:16px}.pct{margin-left:auto;opacity:.6;font-size:12px;padding-right:6px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button{background:var(--silver);color:var(--ink);border:0;border-radius:6px;padding:9px 14px;font-weight:600;cursor:pointer}
+button:hover{background:var(--green)}button:disabled{opacity:.4;cursor:default;background:var(--silver)}
+#toast{min-height:1.4em;color:var(--pink);font-size:13px}
+footer{font-size:12px;opacity:.6;text-align:center;font-family:ui-monospace,monospace}
+@media (max-width:720px){main{grid-template-columns:1fr}#drop{min-height:200px}h1{font-size:21px}}
