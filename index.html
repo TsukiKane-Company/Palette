@@ -6,6 +6,7 @@
 <span id="dropText">ここに画像をドロップ／クリックして選択／Ctrl+V で貼り付け</span><img id="preview" alt="読み込んだ画像" hidden></label>
 <section id="panel">
 <div class="ctrl"><label for="count">色の数：<b id="countVal">6</b></label><input type="range" id="count" min="5" max="8" value="6"></div>
+<div class="ctrl"><label class="sw" for="nobg"><input type="checkbox" id="nobg" checked role="switch"><span class="knob" aria-hidden="true"></span>背景色を除く</label><span id="bgInfo"></span></div>
 <ul id="swatches" aria-live="polite"></ul>
 <div class="btns"><button id="exPng" disabled>PNG で保存</button><button id="exTxt" disabled>TXT で保存</button><button id="exCss" disabled>CSS 変数で保存</button></div>
 <p id="toast" role="status"></p>

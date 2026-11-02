@@ -1,14 +1,27 @@
 "use strict";
 (function(){
 var $=function(i){return document.getElementById(i)};
-var pixels=null,palette=[],srcImg=null;
+var smp=null,palette=[],srcImg=null;window.__tsukiBg=null;
 function hex(c){return"#"+c.map(function(v){return v.toString(16).padStart(2,"0")}).join("").toUpperCase()}
 function toast(t){$("toast").textContent=t;clearTimeout(toast.t);toast.t=setTimeout(function(){$("toast").textContent=""},2000)}
 function sample(img){var M=160,s=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight));
  var w=Math.max(1,Math.round(img.naturalWidth*s)),h=Math.max(1,Math.round(img.naturalHeight*s));
  var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d",{willReadFrequently:true});
- x.imageSmoothingEnabled=false;x.drawImage(img,0,0,w,h);var d=x.getImageData(0,0,w,h).data,out=[];
- for(var i=0;i<d.length;i+=4)if(d[i+3]>=128)out.push([d[i],d[i+1],d[i+2]]);return out}
+ x.imageSmoothingEnabled=false;x.drawImage(img,0,0,w,h);return{w:w,h:h,d:x.getImageData(0,0,w,h).data}}
+// 背景色の検出：外周 3% の枠を見て、6 割以上が近い 1 色なら背景とみなす
+var BG_T=7,BG_SHARE=.6;
+function detectBg(S){var w=S.w,h=S.h,d=S.d,b=Math.max(1,Math.round(Math.min(w,h)*.03)),labs=[],tr=0,tot=0,x,y,i;
+ for(y=0;y<h;y++)for(x=0;x<w;x++){if(x>=b&&x<w-b&&y>=b&&y<h-b)continue;i=(y*w+x)*4;tot++;if(d[i+3]<128){tr++;continue}labs.push({rgb:[d[i],d[i+1],d[i+2]],lab:toLab([d[i],d[i+1],d[i+2]])})}
+ if(tr>=tot*BG_SHARE)return{transparent:true}; // 枠がほぼ透明 → 透明ピクセルは元々除外済み
+ if(!labs.length||labs.length<tot*BG_SHARE)return null;
+ var bins=new Map(),bk=null,bn=0;labs.forEach(function(p){var q=((p.rgb[0]>>4)<<8)|((p.rgb[1]>>4)<<4)|(p.rgb[2]>>4),n=(bins.get(q)||0)+1;bins.set(q,n);if(n>bn){bn=n;bk=q}});
+ var c=[0,0,0],n=0;labs.forEach(function(p){var q=((p.rgb[0]>>4)<<8)|((p.rgb[1]>>4)<<4)|(p.rgb[2]>>4);if(q===bk){c[0]+=p.lab[0];c[1]+=p.lab[1];c[2]+=p.lab[2];n++}});c=c.map(function(v){return v/n});
+ for(var r=0;r<2;r++){var s=[0,0,0],m=0;labs.forEach(function(p){if(d2(p.lab,c)<BG_T*BG_T){s[0]+=p.lab[0];s[1]+=p.lab[1];s[2]+=p.lab[2];m++}});if(!m)return null;c=s.map(function(v){return v/m})}
+ if(m<tot*BG_SHARE)return null;
+ var best=null,bd=1e18;labs.forEach(function(p){var e=d2(p.lab,c);if(e<bd){bd=e;best=p.rgb}});return{lab:c,rgb:best,share:m/tot}}
+function pixelsOf(S,bg){var d=S.d,out=[],T2=BG_T*BG_T,cache=new Map();
+ for(var i=0;i<d.length;i+=4){if(d[i+3]<128)continue;var p=[d[i],d[i+1],d[i+2]];
+  if(bg){var key=(p[0]<<16)|(p[1]<<8)|p[2],v=cache.get(key);if(v===undefined){v=d2(toLab(p),bg.lab)<T2;cache.set(key,v)}if(v)continue}out.push(p)}return out}
 function lin(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}
 function gam(v){v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.max(0,Math.min(255,Math.round(v*255)))}
 function toLab(c){var r=lin(c[0]),g=lin(c[1]),b=lin(c[2]);
@@ -50,12 +63,16 @@ function render(){var ul=$("swatches");ul.innerHTML="";var tot=palette.reduce(fu
 function copy(t){function ok(){toast(t+" をコピーしたよ")}
  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,fb);else fb();
  function fb(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){toast("コピーできなかった… "+t)}a.remove()}}
-function run(){if(!pixels)return;TsukiLoader.show({caption:"色を拾ってるよ…",size:3});
- setTimeout(function(){try{var k=+$("count").value;var t0=performance.now();palette=extract(pixels,k);window.__tsukiMs=performance.now()-t0;render();if(palette.length<k)toast("この画像には "+palette.length+" 色しかなかったよ")}finally{TsukiLoader.hide()}},30)}
+function run(){if(!smp)return;TsukiLoader.show({caption:"色を拾ってるよ…",size:3});
+ setTimeout(function(){try{var k=+$("count").value,t0=performance.now(),bg=$("nobg").checked?detectBg(smp):null,tp=!!(bg&&bg.transparent);if(tp)bg=null;var px=bg?pixelsOf(smp,bg):null;
+  if(bg&&px.length<smp.w*smp.h*.02){bg=null;px=null} // ほぼ全部が背景色なら除外しない
+  if(!px)px=pixelsOf(smp,null);window.__tsukiBg=bg?hex(bg.rgb):null;
+  var st=$("bgInfo");if(bg){st.innerHTML='<span class="chip mini" style="background:'+hex(bg.rgb)+'"></span>'+hex(bg.rgb)+' を除外中';}else st.textContent=!$("nobg").checked?"":tp?"背景は透明（透明部分は除外済み）":"背景色は見つからなかったよ";
+  if(!px.length){palette=[];render();toast("透明な画像みたい");return}
+  palette=extract(px,k);window.__tsukiMs=performance.now()-t0;render();if(palette.length<k)toast("この画像には "+palette.length+" 色しかなかったよ")}finally{TsukiLoader.hide()}},30)}
 function load(file){$("toast").textContent="";if(!file||!/^image\//.test(file.type)){toast("画像ファイルを選んでね");return}
  TsukiLoader.show({caption:"読み込み中…",size:3});var url=URL.createObjectURL(file),img=new Image();
- img.onload=function(){srcImg=img;var p=$("preview");p.src=url;p.hidden=false;$("dropText").hidden=true;pixels=sample(img);TsukiLoader.hide();
-  if(!pixels.length){toast("透明な画像みたい");return}run()};
+ img.onload=function(){srcImg=img;var p=$("preview");p.src=url;p.hidden=false;$("dropText").hidden=true;smp=sample(img);TsukiLoader.hide();run()};
  img.onerror=function(){TsukiLoader.hide();URL.revokeObjectURL(url);toast("この画像は開けなかった…（HEIC などはブラウザによって読めないことがあるよ。PNG か JPEG に変換してみてね）")};img.src=url}
 function dl(name,blob){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
 $("file").onchange=function(e){load(e.target.files[0])};
@@ -64,6 +81,7 @@ var dr=$("drop");dr.addEventListener("keydown",function(e){if(e.key==="Enter"||e
 ["dragleave","drop"].forEach(function(t){dr.addEventListener(t,function(e){e.preventDefault();dr.classList.remove("over")})});
 dr.addEventListener("drop",function(e){load(e.dataTransfer.files[0])});
 document.addEventListener("paste",function(e){var it=[].slice.call(e.clipboardData.items||[]).find(function(i){return i.type.indexOf("image/")===0});if(it)load(it.getAsFile());else toast("貼り付けられたのは画像じゃないみたい。画像をコピーしてからもう一度試してね")});
+$("nobg").onchange=run;
 var deb;$("count").oninput=function(){$("countVal").textContent=this.value;clearTimeout(deb);deb=setTimeout(run,120)};
 $("exPng").onclick=function(){var W=120,c=document.createElement("canvas");c.width=W*palette.length;c.height=W;var x=c.getContext("2d");
  palette.forEach(function(p,i){x.fillStyle=hex(p.rgb);x.fillRect(i*W,0,W,W)});c.toBlob(function(b){dl("palette.png",b)})};

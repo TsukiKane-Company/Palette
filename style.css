@@ -16,4 +16,11 @@ button{background:var(--silver);color:var(--ink);border:0;border-radius:6px;padd
 button:hover{background:var(--green)}button:disabled{opacity:.4;cursor:default;background:var(--silver)}
 #toast{min-height:1.4em;color:var(--pink);font-size:13px}
 footer{font-size:12px;opacity:.6;text-align:center;font-family:ui-monospace,monospace}
+.sw{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;-webkit-user-select:none;font-size:14px}
+.sw input{position:absolute;opacity:0;width:1px;height:1px}
+.knob{position:relative;width:40px;height:22px;border-radius:11px;background:#4a4352;transition:background .15s;flex:none}
+.knob::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--silver);transition:transform .15s}
+.sw input:checked+.knob{background:var(--green)}.sw input:checked+.knob::after{transform:translateX(18px);background:var(--ink)}
+.sw input:focus-visible+.knob{outline:2px solid var(--pink);outline-offset:2px}
+#bgInfo{font-size:12px;opacity:.75;display:inline-flex;align-items:center;gap:6px;font-family:ui-monospace,monospace}.chip.mini{width:14px;height:14px;border-radius:3px}
 @media (max-width:720px){main{grid-template-columns:1fr}#drop{min-height:200px}h1{font-size:21px}}
